@@ -4,6 +4,7 @@ import plotly.express as px
 from datetime import datetime, timedelta
 import requests
 import os
+import hmac
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -68,6 +69,28 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# Password protection
+def check_password():
+    """Returns True if the user entered the correct password."""
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]
+        else:
+            st.session_state["password_correct"] = False
+
+    if st.session_state.get("password_correct", False):
+        return True
+
+    st.text_input("Password", type="password", on_change=password_entered, key="password")
+    if "password_correct" in st.session_state:
+        st.error("Incorrect password")
+    return False
+
+if not check_password():
+    st.stop()
 
 # Custom CSS - works for both light and dark themes
 st.markdown("""
